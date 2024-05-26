@@ -9,6 +9,7 @@ import (
 
 	"github.com/Rhymond/go-money"
 	"github.com/brianvoe/gofakeit/v7"
+	"github.com/git-masi/paynext/cmd/internal-server/features"
 	"github.com/git-masi/paynext/internal/.gen/table"
 	"github.com/git-masi/paynext/internal/sqlitedb"
 )
@@ -41,6 +42,10 @@ func main() {
 
 	mux.HandleFunc("GET /ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("pong"))
+	})
+
+	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+		features.Home().Render(r.Context(), w)
 	})
 
 	mux.HandleFunc("POST /workers", func(w http.ResponseWriter, r *http.Request) {
