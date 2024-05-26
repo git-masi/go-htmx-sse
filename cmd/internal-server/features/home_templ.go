@@ -31,7 +31,7 @@ func Home() templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<h1>Test</h1>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<main class=\"box-border min-h-svh grid grid-cols-3\"><section class=\"box-border border-r-solid border-r-2 border-gray\"><button hx-post=\"/workers\" hx-swap=\"none\">New Worker</button><div hx-ext=\"sse\" sse-connect=\"/workers/sse/created\" sse-swap=\"WorkerCreated\" hx-swap=\"beforeend\"></div></section><section class=\"box-border border-r-solid border-r-2 border-gray\"><p>under construction</p></section><section class=\"box-border\"><p>under construction</p></section></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

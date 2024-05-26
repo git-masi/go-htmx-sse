@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log/slog"
 	"net/http"
@@ -9,9 +10,12 @@ import (
 
 	"github.com/Rhymond/go-money"
 	"github.com/brianvoe/gofakeit/v7"
+	"github.com/git-masi/paynext/cmd/internal-server/domains/workers"
 	"github.com/git-masi/paynext/cmd/internal-server/features"
+	"github.com/git-masi/paynext/internal/.gen/model"
 	"github.com/git-masi/paynext/internal/.gen/table"
 	"github.com/git-masi/paynext/internal/sqlitedb"
+	jetsqlite "github.com/go-jet/jet/v2/sqlite"
 )
 
 type config struct {
@@ -22,6 +26,8 @@ func main() {
 	var cfg config
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}))
+
+	wps := workers.NewWorkerPubSub()
 
 	flag.StringVar(&cfg.dsn, "dsn", "", "A data source name (DSN) for the database")
 	flag.Parse()
@@ -46,6 +52,56 @@ func main() {
 
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		features.Home().Render(r.Context(), w)
+	})
+
+	mux.HandleFunc("GET /workers/sse/created", func(w http.ResponseWriter, r *http.Request) {
+		defer r.Context().Done()
+
+		// Set the headers for Server-Sent Events
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
+
+		// Disable chunked transfer encoding to prevent ERR_INCOMPLETE_CHUNKED_ENCODING on the client
+		w.Header().Set("Transfer-Encoding", "identity")
+
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			http.Error(w, "Streaming unsupported", http.StatusInternalServerError)
+			return
+		}
+
+		topic := workers.Created.String()
+		ch := wps.Subscribe(topic)
+		defer wps.Unsubscribe(topic, ch)
+
+		for {
+			select {
+			case e := <-ch:
+				stmt := table.Workers.SELECT(table.Workers.AllColumns).
+					WHERE(table.Workers.ID.EQ(jetsqlite.Int(e.WorkerID)))
+
+				logger.Info(stmt.DebugSql())
+
+				var dest []model.Workers
+
+				ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+				err := stmt.QueryContext(ctx, db, &dest)
+				if err != nil {
+					logger.Error("cannot query worker", "error", err)
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					cancel()
+					return
+				}
+
+				w.Write(workers.WorkerCreated(r.Context(), dest[0]).Bytes())
+				flusher.Flush()
+				cancel()
+			case <-time.After(5 * time.Second):
+				w.Write([]byte(":ping"))
+				flusher.Flush()
+			}
+		}
 	})
 
 	mux.HandleFunc("POST /workers", func(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +132,8 @@ func main() {
 		}
 
 		logger.Info("new worker id", "id", id)
+
+		wps.Publish(workers.Created.String(), workers.PubSubEvent{WorkerID: id})
 	})
 
 	server := http.Server{

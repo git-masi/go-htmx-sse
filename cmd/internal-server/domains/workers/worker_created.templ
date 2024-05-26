@@ -1,0 +1,12 @@
+package workers
+
+import (
+	"fmt"
+	"github.com/git-masi/paynext/internal/.gen/model"
+)
+
+templ workerCreated(w model.Workers) {
+	<div data-worker-id={ fmt.Sprint(*w.ID) }>
+		<p>{ w.FirstName } { w.LastName }</p>
+	</div>
+}

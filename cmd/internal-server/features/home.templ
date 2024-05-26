@@ -4,6 +4,17 @@ import "github.com/git-masi/paynext/cmd/internal-server/components/layout"
 
 templ Home() {
 	@layout.Page("Paynext") {
-		<h1>Test</h1>
+		<main class="box-border min-h-svh grid grid-cols-3">
+			<section class="box-border border-r-solid border-r-2 border-gray">
+				<button hx-post="/workers" hx-swap="none">New Worker</button>
+				<div hx-ext="sse" sse-connect="/workers/sse/created" sse-swap="WorkerCreated" hx-swap="beforeend"></div>
+			</section>
+			<section class="box-border border-r-solid border-r-2 border-gray">
+				<p>under construction</p>
+			</section>
+			<section class="box-border">
+				<p>under construction</p>
+			</section>
+		</main>
 	}
 }

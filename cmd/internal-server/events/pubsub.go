@@ -1,4 +1,4 @@
-package comms
+package events
 
 import "sync"
 
