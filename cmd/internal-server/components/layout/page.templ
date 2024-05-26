@@ -1,0 +1,44 @@
+package layout
+
+script unoconfig() {
+    window.__unocss = {
+        // Example
+        // theme: {
+        //     fontFamily: {
+        //         sans: ["Roboto", "sans-serif"]
+        //     },
+        //     colors: {
+        //         whitesmoke: "#F5F5F5"
+        //     }
+        // }
+    }
+}
+
+templ Page(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title }</title>
+			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@unocss/reset/normalize.min.css"/>
+			<style type="text/css">
+                body {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    min-height: 100vh;
+                }
+
+                body * {
+                    font-family: inherit;
+                }
+            </style>
+			@unoconfig()
+			<script src="https://cdn.jsdelivr.net/npm/@unocss/runtime"></script>
+			<script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2" crossorigin="anonymous"></script>
+			<script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/sse.js"></script>
+		</head>
+		<body hx-boost="true" class="px-2">
+			{ children... }
+		</body>
+	</html>
+}
