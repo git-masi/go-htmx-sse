@@ -1,7 +1,7 @@
 .env
 
 # code gen
-*._templ.go
+*_templ.go
 .gen/
 
 # sqlite
