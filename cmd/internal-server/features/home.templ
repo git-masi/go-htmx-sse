@@ -4,25 +4,48 @@ import "github.com/git-masi/paynext/cmd/internal-server/components/layout"
 
 templ Home() {
 	@layout.Page("Paynext") {
-		<main class="box-border h-screen grid grid-cols-2">
-			<section class="box-border border-b-solid border-b-2 border-gray col-span-2 grid grid-cols-3">
-				// <div class="bg-[url('/static/payroll-clerk-pixel-art.png')] w-30vw h-30vh" style="background-image: url('/static/payroll-clerk-pixel-art.png'); background-size: contain; background-repeat: no-repeat;"></div>
-				<div>
-					<img src="/static/payroll-clerk-pixel-art.png" alt="payroll clerk" class="w-full"/>
+		<main class="box-border h-screen p-2 grid grid-cols-3 grid-rows-2">
+			<section class="row-span-2 p-y-2 p-r-1">
+				<img src="/static/payroll-clerk-pixel-art.png" alt="payroll clerk" class="w-full"/>
+			</section>
+			<section class="col-span-2 row-span-1 grid grid-cols-2 gap-2 p-l-1 m-b-2">
+				<div class="flex flex-col rd shadow-md shadow-gray p-2">
+					<h3 class="m-t-0 m-b-2">Workers</h3>
+					<div
+						hx-ext="sse"
+						sse-connect="/workers/sse/created"
+						sse-swap="WorkerCreated"
+						hx-swap="beforeend"
+						class="grow mb-2 overflow-y-scroll box-border"
+					></div>
+					<div class="flex justify-end">
+						<button
+							data-new-worker-button
+							hx-post="/workers"
+							hx-swap="none"
+							onclick="pauseButton"
+						>
+							New Worker
+						</button>
+					</div>
 				</div>
-				<div>
-					<button data-new-worker-button hx-post="/workers" hx-swap="none" onclick="pauseButton">New Worker</button>
-					<div hx-ext="sse" sse-connect="/workers/sse/created" sse-swap="WorkerCreated" hx-swap="beforeend"></div>
-				</div>
-				<div>
-					<p>Pay Period</p>
+				<div class="flex flex-col p-2 rd shadow-md shadow-gray">
+					<h3 class="m-t-0 m-b-2">Reports</h3>
+					<div class="grow overflow-y-scroll box-border"></div>
 				</div>
 			</section>
-			<section class="box-border border-r-solid border-r-2 border-gray bg-sky-100">
-				<p>under construction</p>
-			</section>
-			<section class="box-border bg-orange-100">
-				<p>under construction</p>
+			<section class="flex col-span-2 row-span-1">
+				<form
+					class="grow flex flex-col rd shadow-md shadow-gray p-2"
+				>
+					<h3 class="m-t-0 m-b-2">Pay period</h3>
+					<div class="grow m-b-2 overflow-y-scroll box-border"></div>
+					<div class="flex justify-end">
+						<button type="submit">
+							Submit Payroll
+						</button>
+					</div>
+				</form>
 			</section>
 		</main>
 		<script>
