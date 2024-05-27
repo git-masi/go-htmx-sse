@@ -19,6 +19,7 @@ templ Home() {
 					<div>
 						<h3 class="m-t-0 m-b-2">Workers</h3>
 						<div
+							data-worker-created-list
 							hx-ext="sse"
 							sse-connect="/workers/sse/created"
 							sse-swap="WorkerCreated"
@@ -66,6 +67,18 @@ templ Home() {
 							nwb.removeAttribute("disabled");
 						}, 1500);
 					});
+				}
+
+				const wcl = document.querySelector("[data-worker-created-list]");
+				if (wcl !== null) {
+					const wclObserver = new MutationObserver((mutationsList) => {
+						for (let mutation of mutationsList) {
+							if (mutation.type === 'childList') {
+								wcl.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+							}
+						}
+					});
+					wclObserver.observe(wcl, {childList:true})
 				}
 			});
 		</script>
