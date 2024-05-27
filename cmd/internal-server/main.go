@@ -101,7 +101,7 @@ func main() {
 				flusher.Flush()
 				cancel()
 			case <-time.After(5 * time.Second):
-				w.Write([]byte(":ping"))
+				w.Write([]byte(":ping\n"))
 				flusher.Flush()
 			}
 		}
