@@ -46,6 +46,9 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	fs := http.FileServer(http.Dir("./cmd/internal-server/static"))
+	mux.Handle("GET /static/", http.StripPrefix("/static/", fs))
+
 	mux.HandleFunc("GET /ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("pong"))
 	})

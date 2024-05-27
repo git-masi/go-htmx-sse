@@ -4,15 +4,24 @@ import "github.com/git-masi/paynext/cmd/internal-server/components/layout"
 
 templ Home() {
 	@layout.Page("Paynext") {
-		<main class="box-border min-h-svh grid grid-cols-3">
-			<section class="box-border border-r-solid border-r-2 border-gray">
-				<button data-new-worker-button hx-post="/workers" hx-swap="none" onclick="pauseButton">New Worker</button>
-				<div hx-ext="sse" sse-connect="/workers/sse/created" sse-swap="WorkerCreated" hx-swap="beforeend"></div>
+		<main class="box-border h-screen grid grid-cols-2">
+			<section class="box-border border-b-solid border-b-2 border-gray col-span-2 grid grid-cols-3">
+				// <div class="bg-[url('/static/payroll-clerk-pixel-art.png')] w-30vw h-30vh" style="background-image: url('/static/payroll-clerk-pixel-art.png'); background-size: contain; background-repeat: no-repeat;"></div>
+				<div>
+					<img src="/static/payroll-clerk-pixel-art.png" alt="payroll clerk" class="w-full"/>
+				</div>
+				<div>
+					<button data-new-worker-button hx-post="/workers" hx-swap="none" onclick="pauseButton">New Worker</button>
+					<div hx-ext="sse" sse-connect="/workers/sse/created" sse-swap="WorkerCreated" hx-swap="beforeend"></div>
+				</div>
+				<div>
+					<p>Pay Period</p>
+				</div>
 			</section>
-			<section class="box-border border-r-solid border-r-2 border-gray">
+			<section class="box-border border-r-solid border-r-2 border-gray bg-sky-100">
 				<p>under construction</p>
 			</section>
-			<section class="box-border">
+			<section class="box-border bg-orange-100">
 				<p>under construction</p>
 			</section>
 		</main>
