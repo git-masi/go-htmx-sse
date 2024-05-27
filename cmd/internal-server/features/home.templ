@@ -55,15 +55,17 @@ templ Home() {
 			</section>
 		</main>
 		<script>
-			const nwb = document.querySelector("[data-new-worker-button]");
-			if (nwb !== null) {
-				nwb.addEventListener("click", function() {
-					nwb.disabled = true;
-					setTimeout(function() {
-						nwb.removeAttribute("disabled");
-					}, 1500);
-				});
-			}
+			document.addEventListener("DOMContentLoaded", () => {
+				const nwb = document.querySelector("[data-new-worker-button]");
+				if (nwb !== null) {
+					nwb.addEventListener("click", () => {
+						nwb.disabled = true;
+						setTimeout(() => {
+							nwb.removeAttribute("disabled");
+						}, 1500);
+					});
+				}
+			});
 		</script>
 	}
 }
