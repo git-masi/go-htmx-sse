@@ -6,9 +6,15 @@ templ Home() {
 	@layout.Page("Paynext") {
 		<main class="box-border h-screen p-2 grid grid-cols-3 grid-rows-2">
 			<section class="row-span-2 p-y-2 p-r-1">
-				<img src="/static/payroll-clerk-pixel-art.png" alt="payroll clerk" class="w-full"/>
+				<div class="flex align-center justify-center">
+					<img src="/static/payroll-clerk-pixel-art.png" alt="payroll clerk" class="w-300px h-300px m-b-2"/>
+				</div>
+				<p class="m-b-2">Welcome payroll clerk!</p>
+				<p class="m-b-2">Add some workers to get started.</p>
+				<p class="m-b-2">When workers are "active" you can add them to the payroll.</p>
+				<p class="m-b-2">You can review your payroll report when the payroll is in the "final" status.</p>
 			</section>
-			<section class="col-span-2 row-span-1 grid grid-cols-2 gap-2 p-l-1 m-b-2">
+			<section class="col-span-2 row-span-1 grid grid-cols-2 gap-2 m-b-2">
 				<div class="flex flex-col rd shadow-md shadow-gray p-2">
 					<h3 class="m-t-0 m-b-2">Workers</h3>
 					<div
