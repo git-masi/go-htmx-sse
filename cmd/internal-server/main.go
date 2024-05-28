@@ -112,10 +112,12 @@ func main() {
 			table.Workers.FirstName,
 			table.Workers.LastName,
 			table.Workers.Email,
+			table.Workers.Status,
 		).VALUES(
 			gofakeit.FirstName(),
 			gofakeit.LastName(),
 			gofakeit.Email(),
+			workers.Pending.String(),
 		)
 
 		logger.Info(stmt.DebugSql())

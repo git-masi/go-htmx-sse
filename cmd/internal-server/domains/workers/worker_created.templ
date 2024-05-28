@@ -7,6 +7,6 @@ import (
 
 templ workerCreated(w model.Workers) {
 	<div data-worker-id={ fmt.Sprint(*w.ID) }>
-		<p>{ w.FirstName } { w.LastName }</p>
+		<p>{ w.FirstName } { w.LastName } - { w.Status }</p>
 	</div>
 }
