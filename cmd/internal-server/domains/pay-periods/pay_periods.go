@@ -1,4 +1,4 @@
-package payperiod
+package payperiods
 
 type Status int
 

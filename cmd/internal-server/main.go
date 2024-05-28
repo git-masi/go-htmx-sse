@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
-	payperiod "github.com/git-masi/paynext/cmd/internal-server/domains/pay-period"
+	payperiods "github.com/git-masi/paynext/cmd/internal-server/domains/pay-periods"
 	"github.com/git-masi/paynext/cmd/internal-server/domains/workers"
 	"github.com/git-masi/paynext/cmd/internal-server/features"
 	"github.com/git-masi/paynext/internal/.gen/model"
@@ -47,15 +47,15 @@ func main() {
 	}
 	defer db.Close()
 
-	exists, err := RowExists(db, table.PayPeriod.TableName(), 1)
+	exists, err := RowExists(db, table.PayPeriods.TableName(), 1)
 	if err != nil {
 		logger.Error("cannot query pay period table", "error", err)
 		os.Exit(1)
 	}
 	if !exists {
 		startDate, endDate := GetWeekStartEnd(time.Now().UTC())
-		stmt := table.PayPeriod.INSERT(table.PayPeriod.StartDate, table.PayPeriod.EndDate, table.PayPeriod.Status).
-			VALUES(startDate, endDate, payperiod.Pending.String())
+		stmt := table.PayPeriods.INSERT(table.PayPeriods.StartDate, table.PayPeriods.EndDate, table.PayPeriods.Status).
+			VALUES(startDate, endDate, payperiods.Pending.String())
 
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 
@@ -203,7 +203,7 @@ func main() {
 			return
 		}
 
-		exists, err = RowExists(db, table.PayPeriod.TableName(), payPeriodID)
+		exists, err = RowExists(db, table.PayPeriods.TableName(), payPeriodID)
 		if err != nil {
 			logger.Error("error querying pay period ID", "error", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
