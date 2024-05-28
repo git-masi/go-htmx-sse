@@ -1,4 +1,4 @@
-package payperiods
+package earnings
 
 type Status int
 
@@ -16,5 +16,5 @@ func (s Status) String() string {
 		return "active"
 	}
 
-	panic("invalid pay period status")
+	panic("invalid earning status")
 }

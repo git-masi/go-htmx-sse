@@ -6,12 +6,15 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"math/rand/v2"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
 
+	"github.com/Rhymond/go-money"
 	"github.com/brianvoe/gofakeit/v7"
+	"github.com/git-masi/paynext/cmd/internal-server/domains/earnings"
 	payperiods "github.com/git-masi/paynext/cmd/internal-server/domains/pay-periods"
 	"github.com/git-masi/paynext/cmd/internal-server/domains/workers"
 	"github.com/git-masi/paynext/cmd/internal-server/features"
@@ -203,21 +206,61 @@ func main() {
 			return
 		}
 
-		exists, err = RowExists(db, table.PayPeriods.TableName(), payPeriodID)
+		payPeriodStmt := table.PayPeriods.SELECT(table.PayPeriods.StartDate, table.PayPeriods.EndDate).
+			WHERE(table.PayPeriods.ID.EQ(jetsqlite.Int(payPeriodID)))
+
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
+
+		var payPeriod struct {
+			StartDate time.Time
+			EndDate   time.Time
+		}
+
+		err = payPeriodStmt.QueryContext(ctx, db, &payPeriod)
 		if err != nil {
 			logger.Error("error querying pay period ID", "error", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
-		if !exists {
-			logger.Error("cannot find pay period matching ID", "id", payPeriodID)
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+
+		payRate := money.New(1+rand.Int64N(10), money.USD)
+
+		earningStmt := table.Earnings.INSERT(
+			table.Earnings.DateOfWork,
+			table.Earnings.HoursWorked,
+			table.Earnings.PayRateAmount,
+			table.Earnings.PayRateCurrency,
+			table.Earnings.Status,
+			table.Earnings.WorkerID,
+		).
+			VALUES(
+				gofakeit.DateRange(payPeriod.StartDate, payPeriod.EndDate),
+				rand.IntN(8)+1,
+				payRate.Amount(),
+				payRate.Currency(),
+				earnings.Pending,
+				workerID,
+			)
+
+		ctx, cancel2 := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel2()
+
+		res, err := earningStmt.ExecContext(ctx, db)
+		if err != nil {
+			logger.Error("sql exec err", "error", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
-		// model.Earnings
-		// table.Earnings.INSERT(table.Earnings.AllColumns).
-		// 	VALUES()
+		earningID, err := res.LastInsertId()
+		if err != nil {
+			logger.Error("sql exec err", "error", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		logger.Info("new earning ID", "id", earningID)
 
 		w.WriteHeader(http.StatusAccepted)
 	})
