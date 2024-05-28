@@ -1,13 +1,17 @@
 package earnings
 
-import "github.com/git-masi/paynext/internal/.gen/model"
-import "fmt"
+import (
+	"fmt"
+	"github.com/git-masi/paynext/internal/.gen/model"
+)
 
 templ earningCreated(e model.Earnings) {
-	<div data-earning-id={ fmt.Sprint(*e.ID) }>
-		<p>{ e.DateOfWork } - { e.Status }</p>
-		<p>Worker ID: { fmt.Sprint(e.WorkerID) } </p>
-		<p>Hours: { fmt.Sprint(e.HoursWorked) }</p>
-		<p>Pay rate: { fmt.Sprint(e.PayRateAmount) }</p>
+	<div data-earning-id={ fmt.Sprint(e.ID) }>
+		<p>
+			<span>{ e.DateOfWork } - { e.Status }</span>
+			| <span>Worker ID: { fmt.Sprint(e.WorkerID) } </span>
+			| <span>Hours: { fmt.Sprint(e.HoursWorked) }</span>
+			| <span>Pay rate: { fmt.Sprint(e.PayRateAmount) }</span>
+		</p>
 	</div>
 }

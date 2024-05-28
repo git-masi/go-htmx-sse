@@ -21,6 +21,7 @@ import (
 	"github.com/git-masi/paynext/internal/.gen/model"
 	"github.com/git-masi/paynext/internal/.gen/table"
 	"github.com/git-masi/paynext/internal/sqlitedb"
+	"github.com/git-masi/paynext/internal/utils"
 	jetsqlite "github.com/go-jet/jet/v2/sqlite"
 )
 
@@ -57,7 +58,7 @@ func main() {
 		os.Exit(1)
 	}
 	if !exists {
-		startDate, endDate := GetWeekStartEnd(time.Now().UTC())
+		startDate, endDate := utils.GetWeekStartEnd(time.Now().UTC())
 		stmt := table.PayPeriods.INSERT(table.PayPeriods.StartDate, table.PayPeriods.EndDate, table.PayPeriods.Status).
 			VALUES(startDate, endDate, payperiods.Edit.String())
 
@@ -221,10 +222,7 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 		defer cancel()
 
-		var payPeriod struct {
-			StartDate time.Time
-			EndDate   time.Time
-		}
+		var payPeriod model.PayPeriods
 
 		err = payPeriodStmt.QueryContext(ctx, db, &payPeriod)
 		if err != nil {
@@ -233,6 +231,20 @@ func main() {
 			return
 		}
 
+		sd, err := utils.ParseDBDate(payPeriod.StartDate)
+		if err != nil {
+			logger.Error("cannot parse pay period start date", "error", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		ed, err := utils.ParseDBDate(payPeriod.EndDate)
+		if err != nil {
+			logger.Error("cannot parse pay period end date", "error", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		dateOfWork := gofakeit.DateRange(sd, ed)
 		payRate := money.New(1+rand.Int64N(10), money.USD)
 
 		earningStmt := table.Earnings.INSERT(
@@ -244,7 +256,7 @@ func main() {
 			table.Earnings.WorkerID,
 		).
 			VALUES(
-				gofakeit.DateRange(payPeriod.StartDate, payPeriod.EndDate),
+				dateOfWork,
 				rand.IntN(8)+1,
 				payRate.Amount(),
 				payRate.Currency(),
@@ -375,18 +387,6 @@ func RowExists(db *sql.DB, tableName string, id int64) (bool, error) {
 	}
 
 	return exists == 1, nil
-}
-
-func GetWeekStartEnd(now time.Time) (time.Time, time.Time) {
-	// Calculate diff from Monday
-	diff := (int(now.Weekday()) + 6) % 7
-
-	// Monday
-	startDate := now.AddDate(0, 0, -diff).Truncate(24 * time.Hour)
-	// Sunday
-	endDate := startDate.AddDate(0, 0, 6).Add(time.Hour*23 + time.Minute*59 + time.Second*59)
-
-	return startDate, endDate
 }
 
 func GetCurrentPayPeriod(db *sql.DB) (int64, error) {
