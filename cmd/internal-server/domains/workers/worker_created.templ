@@ -5,8 +5,15 @@ import (
 	"github.com/git-masi/paynext/internal/.gen/model"
 )
 
-templ workerCreated(w model.Workers) {
-	<div data-worker-id={ fmt.Sprint(*w.ID) }>
+templ workerCreated(w model.Workers, payPeriodID int64) {
+	<div
+		hx-post="/earnings"
+		hx-trigger="click"
+		hx-swap="none"
+		hx-include={ fmt.Sprintf(`[data-worker-id="%d"]`, *w.ID) }
+	>
 		<p>{ w.FirstName } { w.LastName } - { w.Status }</p>
+		<input data-worker-id={ fmt.Sprint(*w.ID) } type="text" name="worker_id" value={ fmt.Sprint(*w.ID) } hidden/>
+		<input data-worker-id={ fmt.Sprint(*w.ID) } type="text" name="pay_period_id" value={ fmt.Sprint(payPeriodID) } hidden/>
 	</div>
 }

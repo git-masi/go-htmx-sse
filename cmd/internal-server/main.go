@@ -59,7 +59,7 @@ func main() {
 	if !exists {
 		startDate, endDate := GetWeekStartEnd(time.Now().UTC())
 		stmt := table.PayPeriods.INSERT(table.PayPeriods.StartDate, table.PayPeriods.EndDate, table.PayPeriods.Status).
-			VALUES(startDate, endDate, payperiods.Pending.String())
+			VALUES(startDate, endDate, payperiods.Edit.String())
 
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 
@@ -116,7 +116,7 @@ func main() {
 
 				logger.Info(stmt.DebugSql())
 
-				var dest []model.Workers
+				var dest model.Workers
 
 				ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 
@@ -128,7 +128,15 @@ func main() {
 					return
 				}
 
-				w.Write(workers.WorkerCreated(r.Context(), dest[0]).Bytes())
+				payPeriodID, err := GetCurrentPayPeriod(db)
+				if err != nil {
+					logger.Error("cannot get pay period ID", "error", err)
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					cancel()
+					return
+				}
+
+				w.Write(workers.WorkerCreated(r.Context(), dest, payPeriodID).Bytes())
 				flusher.Flush()
 				cancel()
 			case <-time.After(5 * time.Second):
@@ -282,6 +290,57 @@ func main() {
 		w.WriteHeader(http.StatusAccepted)
 	})
 
+	mux.HandleFunc("GET /earnings/sse/created", func(w http.ResponseWriter, r *http.Request) {
+		defer r.Context().Done()
+
+		// Set the headers for Server-Sent Events
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
+
+		// Disable chunked transfer encoding to prevent ERR_INCOMPLETE_CHUNKED_ENCODING on the client
+		w.Header().Set("Transfer-Encoding", "identity")
+
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			http.Error(w, "Streaming unsupported", http.StatusInternalServerError)
+			return
+		}
+
+		topic := earnings.Created.String()
+		ch := eps.Subscribe(topic)
+		defer eps.Unsubscribe(topic, ch)
+
+		for {
+			select {
+			case e := <-ch:
+				stmt := table.Earnings.SELECT(table.Earnings.AllColumns).
+					WHERE(table.Earnings.ID.EQ(jetsqlite.Int(e.EarningID)))
+
+				logger.Info(stmt.DebugSql())
+
+				var dest model.Earnings
+
+				ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+
+				err := stmt.QueryContext(ctx, db, &dest)
+				if err != nil {
+					logger.Error("cannot query earning", "error", err)
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					cancel()
+					return
+				}
+
+				w.Write(earnings.EarningCreated(r.Context(), dest).Bytes())
+				flusher.Flush()
+				cancel()
+			case <-time.After(5 * time.Second):
+				w.Write([]byte(":ping\n"))
+				flusher.Flush()
+			}
+		}
+	})
+
 	server := http.Server{
 		// TODO: make this an arg
 		Addr:    ":8080",
@@ -328,4 +387,21 @@ func GetWeekStartEnd(now time.Time) (time.Time, time.Time) {
 	endDate := startDate.AddDate(0, 0, 6).Add(time.Hour*23 + time.Minute*59 + time.Second*59)
 
 	return startDate, endDate
+}
+
+func GetCurrentPayPeriod(db *sql.DB) (int64, error) {
+	stmt := table.PayPeriods.SELECT(table.PayPeriods.ID).
+		WHERE(table.PayPeriods.Status.EQ(jetsqlite.String(payperiods.Edit.String())))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	var dest model.PayPeriods
+
+	err := stmt.QueryContext(ctx, db, &dest)
+	if err != nil {
+		return 0, err
+	}
+
+	return int64(*dest.ID), err
 }

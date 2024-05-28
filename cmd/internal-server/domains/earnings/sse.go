@@ -1,4 +1,4 @@
-package workers
+package earnings
 
 import (
 	"bytes"
@@ -9,12 +9,12 @@ import (
 	"github.com/git-masi/paynext/internal/.gen/model"
 )
 
-const SSE_PREFIX = "Worker"
+const SSE_PREFIX = "Earning"
 
-func WorkerCreated(ctx context.Context, w model.Workers, payPeriodId int64) events.EventStreamFormat {
+func EarningCreated(ctx context.Context, e model.Earnings) events.EventStreamFormat {
 	out := new(bytes.Buffer)
 
-	workerCreated(w, payPeriodId).Render(ctx, out)
+	earningCreated(e).Render(ctx, out)
 
 	return events.EventStreamFormat{
 		Event: fmt.Sprintf("%s%s", SSE_PREFIX, Created),

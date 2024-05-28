@@ -47,7 +47,15 @@ templ Home() {
 					class="grow flex flex-col rd shadow-md shadow-gray p-2"
 				>
 					<h3 class="m-t-0 m-b-2">Pay period</h3>
-					<div class="grow m-b-2 overflow-y-scroll box-border"></div>
+					<div
+						data-earning-created-list
+						hx-ext="sse"
+						sse-connect="/earnings/sse/created"
+						sse-swap="EarningCreated"
+						hx-swap="beforeend"
+						class="m-b-2 overflow-y-scroll box-border"
+						style="height: calc(50vh - 54px - 3rem);"
+					></div>
 					<div class="flex justify-end">
 						<button type="submit">
 							Submit Payroll
@@ -68,6 +76,18 @@ templ Home() {
 						}
 					});
 					wclObserver.observe(wcl, {childList:true})
+				}
+
+				const ecl = document.querySelector("[data-earning-created-list]");
+				if (ecl !== null) {
+					const eclObserver = new MutationObserver((mutationsList) => {
+						for (let mutation of mutationsList) {
+							if (mutation.type === 'childList') {
+								ecl.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+							}
+						}
+					});
+					eclObserver.observe(ecl, {childList:true})
 				}
 			});
 		</script>
