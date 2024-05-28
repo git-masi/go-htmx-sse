@@ -30,7 +30,6 @@ templ Home() {
 					</div>
 					<div class="flex justify-end">
 						<button
-							data-new-worker-button
 							hx-post="/workers"
 							hx-swap="none"
 						>
@@ -59,16 +58,6 @@ templ Home() {
 		</main>
 		<script>
 			document.addEventListener("DOMContentLoaded", () => {
-				const nwb = document.querySelector("[data-new-worker-button]");
-				if (nwb !== null) {
-					nwb.addEventListener("click", () => {
-						nwb.disabled = true;
-						setTimeout(() => {
-							nwb.removeAttribute("disabled");
-						}, 1500);
-					});
-				}
-
 				const wcl = document.querySelector("[data-worker-created-list]");
 				if (wcl !== null) {
 					const wclObserver = new MutationObserver((mutationsList) => {
