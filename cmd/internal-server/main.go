@@ -2,13 +2,15 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"flag"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
-	"github.com/Rhymond/go-money"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/git-masi/paynext/cmd/internal-server/domains/workers"
 	"github.com/git-masi/paynext/cmd/internal-server/features"
@@ -89,6 +91,7 @@ func main() {
 				var dest []model.Workers
 
 				ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+
 				err := stmt.QueryContext(ctx, db, &dest)
 				if err != nil {
 					logger.Error("cannot query worker", "error", err)
@@ -141,6 +144,60 @@ func main() {
 		wps.Publish(workers.Created.String(), workers.PubSubEvent{WorkerID: id})
 	})
 
+	mux.HandleFunc("POST /earnings", func(w http.ResponseWriter, r *http.Request) {
+		err := r.ParseForm()
+		if err != nil {
+			logger.Error("cannot parse form", "error", err)
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		// Parsing IDs as int64 so they can be used with jet in the future
+		workerID, err := strconv.ParseInt(r.PostForm.Get("worker_id"), 10, 64)
+		if err != nil {
+			logger.Error("invalid worker ID", "id", r.PostForm.Get("worker_id"))
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		exists, err := RowExists(db, table.Workers.TableName(), workerID)
+		if err != nil {
+			logger.Error("error querying worker ID", "error", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		if !exists {
+			logger.Error("cannot find worker matching ID", "id", workerID)
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		payPeriodID, err := strconv.ParseInt(r.PostForm.Get("pay_period_id"), 10, 64)
+		if err != nil {
+			logger.Error("invalid worker ID", "id", r.PostForm.Get("pay_period_id"))
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		exists, err = RowExists(db, table.PayPeriod.TableName(), payPeriodID)
+		if err != nil {
+			logger.Error("error querying pay period ID", "error", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		if !exists {
+			logger.Error("cannot find pay period matching ID", "id", payPeriodID)
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		// model.Earnings
+		// table.Earnings.INSERT(table.Earnings.AllColumns).
+		// 	VALUES()
+
+		w.WriteHeader(http.StatusAccepted)
+	})
+
 	server := http.Server{
 		// TODO: make this an arg
 		Addr:    ":8080",
@@ -158,23 +215,21 @@ func main() {
 	}
 }
 
-type Worker struct {
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
-}
+func RowExists(db *sql.DB, tableName string, id int64) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
 
-type Earning struct {
-	WorkerID    int         `json:"worker_id"`
-	DateOfWork  time.Time   `json:"date_of_work"`
-	HoursWorked float32     `json:"hours_worked"`
-	PayRate     money.Money `json:"pay_rate"`
-	Status      string      `json:"status"`
-}
+	// It is possible to do this using jet's `RawStatement` or `EXISTS` but it is not clear how
+	// Generally it is a bad idea to use `fmt.Sprintf` due to the risk of SQL injection but
+	// sqlite doesn't support table names as parameters
+	res := db.QueryRowContext(ctx, fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE id = ?);`, tableName), id)
 
-type PayPeriod struct {
-	StartDate      time.Time `json:"start_date"`
-	EndDate        time.Time `json:"end_date"`
-	WorkerEarnings []Earning `json:"worker_earnings"`
-	Status         string    `json:"status"`
+	var exists int64
+
+	err := res.Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+
+	return exists == 1, nil
 }
