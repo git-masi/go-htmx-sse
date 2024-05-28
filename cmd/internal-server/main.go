@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
+	payperiod "github.com/git-masi/paynext/cmd/internal-server/domains/pay-period"
 	"github.com/git-masi/paynext/cmd/internal-server/domains/workers"
 	"github.com/git-masi/paynext/cmd/internal-server/features"
 	"github.com/git-masi/paynext/internal/.gen/model"
@@ -45,6 +46,29 @@ func main() {
 		os.Exit(1)
 	}
 	defer db.Close()
+
+	exists, err := RowExists(db, table.PayPeriod.TableName(), 1)
+	if err != nil {
+		logger.Error("cannot query pay period table", "error", err)
+		os.Exit(1)
+	}
+	if !exists {
+		startDate, endDate := GetWeekStartEnd(time.Now().UTC())
+		stmt := table.PayPeriod.INSERT(table.PayPeriod.StartDate, table.PayPeriod.EndDate, table.PayPeriod.Status).
+			VALUES(startDate, endDate, payperiod.Pending.String())
+
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+
+		_, err = stmt.ExecContext(ctx, db)
+		if err != nil {
+			logger.Error("cannot insert pay period", "error", err)
+			cancel()
+			os.Exit(1)
+		}
+
+		logger.Info("successfully added a new pay period!")
+		cancel()
+	}
 
 	mux := http.NewServeMux()
 
@@ -232,4 +256,16 @@ func RowExists(db *sql.DB, tableName string, id int64) (bool, error) {
 	}
 
 	return exists == 1, nil
+}
+
+func GetWeekStartEnd(now time.Time) (time.Time, time.Time) {
+	// Calculate diff from Monday
+	diff := (int(now.Weekday()) + 6) % 7
+
+	// Monday
+	startDate := now.AddDate(0, 0, -diff).Truncate(24 * time.Hour)
+	// Sunday
+	endDate := startDate.AddDate(0, 0, 6).Add(time.Hour*23 + time.Minute*59 + time.Second*59)
+
+	return startDate, endDate
 }
