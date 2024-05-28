@@ -34,6 +34,7 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}))
 
 	wps := workers.NewWorkerPubSub()
+	eps := earnings.NewEarningPubSub()
 
 	flag.StringVar(&cfg.dsn, "dsn", "", "A data source name (DSN) for the database")
 	flag.Parse()
@@ -275,6 +276,8 @@ func main() {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
+
+		eps.Publish(earnings.Created.String(), earnings.PubSubEvent{EarningID: earningID})
 
 		w.WriteHeader(http.StatusAccepted)
 	})

@@ -1,4 +1,4 @@
-package workers
+package earnings
 
 type Event int
 
@@ -20,5 +20,5 @@ func (s Event) String() string {
 		return "Deleted"
 	}
 
-	panic("invalid worker event")
+	panic("invalid earning event")
 }
