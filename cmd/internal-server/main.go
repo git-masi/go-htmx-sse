@@ -262,6 +262,20 @@ func main() {
 
 		logger.Info("new earning ID", "id", earningID)
 
+		// TODO: make this part of a transaction
+		peStmt := table.PayPeriodEarnings.INSERT(table.PayPeriodEarnings.PayPeriodID, table.PayPeriodEarnings.EarningID).
+			VALUES(payPeriodID, earningID)
+
+		ctx, cancel3 := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel3()
+
+		_, err = peStmt.ExecContext(ctx, db)
+		if err != nil {
+			logger.Error("sql exec err", "error", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
 		w.WriteHeader(http.StatusAccepted)
 	})
 
