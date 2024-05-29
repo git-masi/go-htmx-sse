@@ -77,6 +77,10 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	workersRouter := workers.NewRouter(workers.Config{DB: db, PubSub: wps, Logger: logger})
+
+	workersRouter.Handle("/workers/", http.StripPrefix("/v1", mux))
+
 	fs := http.FileServer(http.Dir("./cmd/internal-server/static"))
 	mux.Handle("GET /static/", http.StripPrefix("/static/", fs))
 
@@ -86,99 +90,6 @@ func main() {
 
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		features.Home().Render(r.Context(), w)
-	})
-
-	mux.HandleFunc("GET /workers/sse/created", func(w http.ResponseWriter, r *http.Request) {
-		defer r.Context().Done()
-
-		// Set the headers for Server-Sent Events
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("Connection", "keep-alive")
-
-		// Disable chunked transfer encoding to prevent ERR_INCOMPLETE_CHUNKED_ENCODING on the client
-		w.Header().Set("Transfer-Encoding", "identity")
-
-		flusher, ok := w.(http.Flusher)
-		if !ok {
-			http.Error(w, "Streaming unsupported", http.StatusInternalServerError)
-			return
-		}
-
-		topic := workers.Created.String()
-		ch := wps.Subscribe(topic)
-		defer wps.Unsubscribe(topic, ch)
-
-		for {
-			select {
-			case e := <-ch:
-				stmt := table.Workers.SELECT(table.Workers.AllColumns).
-					WHERE(table.Workers.ID.EQ(jetsqlite.Int(e.WorkerID)))
-
-				logger.Info(stmt.DebugSql())
-
-				var dest model.Workers
-
-				ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-
-				err := stmt.QueryContext(ctx, db, &dest)
-				if err != nil {
-					logger.Error("cannot query worker", "error", err)
-					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-					cancel()
-					return
-				}
-
-				payPeriodID, err := GetCurrentPayPeriod(db)
-				if err != nil {
-					logger.Error("cannot get pay period ID", "error", err)
-					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-					cancel()
-					return
-				}
-
-				w.Write(workers.WorkerCreated(r.Context(), dest, payPeriodID).Bytes())
-				flusher.Flush()
-				cancel()
-			case <-time.After(5 * time.Second):
-				w.Write([]byte(":ping\n"))
-				flusher.Flush()
-			}
-		}
-	})
-
-	mux.HandleFunc("POST /workers", func(w http.ResponseWriter, r *http.Request) {
-		stmt := table.Workers.INSERT(
-			table.Workers.FirstName,
-			table.Workers.LastName,
-			table.Workers.Email,
-			table.Workers.Status,
-		).VALUES(
-			gofakeit.FirstName(),
-			gofakeit.LastName(),
-			gofakeit.Email(),
-			workers.Pending.String(),
-		)
-
-		logger.Info(stmt.DebugSql())
-
-		res, err := stmt.ExecContext(r.Context(), db)
-		if err != nil {
-			logger.Error("sql exec err", "error", err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-
-		id, err := res.LastInsertId()
-		if err != nil {
-			logger.Error("sql exec err", "error", err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-
-		logger.Info("new worker id", "id", id)
-
-		wps.Publish(workers.Created.String(), workers.PubSubEvent{WorkerID: id})
 	})
 
 	mux.HandleFunc("POST /earnings", func(w http.ResponseWriter, r *http.Request) {
@@ -387,21 +298,4 @@ func RowExists(db *sql.DB, tableName string, id int64) (bool, error) {
 	}
 
 	return exists == 1, nil
-}
-
-func GetCurrentPayPeriod(db *sql.DB) (int64, error) {
-	stmt := table.PayPeriods.SELECT(table.PayPeriods.ID).
-		WHERE(table.PayPeriods.Status.EQ(jetsqlite.String(payperiods.Edit.String())))
-
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-
-	var dest model.PayPeriods
-
-	err := stmt.QueryContext(ctx, db, &dest)
-	if err != nil {
-		return 0, err
-	}
-
-	return int64(*dest.ID), err
 }
