@@ -56,15 +56,15 @@ func main() {
 		w.Write([]byte("pong"))
 	})
 
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /home", func(w http.ResponseWriter, r *http.Request) {
 		features.Home().Render(r.Context(), w)
 	})
 
 	workersRouter := workers.NewRouter(workers.Config{DB: db, PubSub: wps, Logger: logger})
-	workersRouter.Handle("/workers/", http.StripPrefix("/workers", mux))
+	mux.Handle("/workers/", http.StripPrefix("/workers", workersRouter))
 
 	earningsRouter := earnings.NewRouter(earnings.Config{DB: db, PubSub: eps, Logger: logger})
-	earningsRouter.Handle("/earnings/", http.StripPrefix("/earnings", mux))
+	mux.Handle("/earnings/", http.StripPrefix("/earnings", earningsRouter))
 
 	server := http.Server{
 		// TODO: make this an arg

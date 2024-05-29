@@ -28,7 +28,7 @@ func NewRouter(cfg Config) *http.ServeMux {
 
 	mux.HandleFunc("GET /sse/created", emitWorkerCreated(cfg))
 
-	mux.HandleFunc("POST /", addWorker(cfg))
+	mux.HandleFunc("POST /create", addWorker(cfg))
 
 	return mux
 }

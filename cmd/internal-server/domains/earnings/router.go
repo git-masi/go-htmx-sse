@@ -30,7 +30,7 @@ type Config struct {
 func NewRouter(cfg Config) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /", addEarning(cfg))
+	mux.HandleFunc("POST /create", addEarning(cfg))
 
 	mux.HandleFunc("GET /sse/created", emitEarningCreated(cfg))
 
