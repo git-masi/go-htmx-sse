@@ -6,13 +6,19 @@ import (
 )
 
 templ workerCreated(w model.Workers, payPeriodID int64) {
-	<div
-		hx-post="/earnings"
-		hx-trigger="click"
-		hx-swap="none"
-		hx-include={ fmt.Sprintf(`[data-worker-id="%d"]`, *w.ID) }
-	>
-		<p>{ w.FirstName } { w.LastName } - { w.Status }</p>
+	<div class="flex">
+		<p class="mr-4">{ w.FirstName } { w.LastName } - { w.Status }</p>
+		<button
+			type="button"
+			hx-post="/earnings/add"
+			hx-swap="none"
+			hx-include={ fmt.Sprintf(`[data-worker-id="%d"]`, *w.ID) }
+			if w.Status != Active.String() {
+				disabled
+			}
+		>
+			Add Earning
+		</button>
 		<input data-worker-id={ fmt.Sprint(*w.ID) } type="text" name="worker_id" value={ fmt.Sprint(*w.ID) } hidden/>
 		<input data-worker-id={ fmt.Sprint(*w.ID) } type="text" name="pay_period_id" value={ fmt.Sprint(payPeriodID) } hidden/>
 	</div>
