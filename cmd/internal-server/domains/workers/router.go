@@ -26,14 +26,14 @@ type Config struct {
 func NewRouter(cfg Config) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /sse/created", EmitWorkerCreated(cfg))
+	mux.HandleFunc("GET /sse/created", emitWorkerCreated(cfg))
 
-	mux.HandleFunc("POST /workers", AddWorker(cfg))
+	mux.HandleFunc("POST /", addWorker(cfg))
 
 	return mux
 }
 
-func EmitWorkerCreated(cfg Config) func(http.ResponseWriter, *http.Request) {
+func emitWorkerCreated(cfg Config) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Context().Done()
 
@@ -94,7 +94,7 @@ func EmitWorkerCreated(cfg Config) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
-func AddWorker(cfg Config) func(http.ResponseWriter, *http.Request) {
+func addWorker(cfg Config) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		stmt := Workers.INSERT(
 			Workers.FirstName,
