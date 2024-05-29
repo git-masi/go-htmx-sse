@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"flag"
 	"log/slog"
 	"net/http"
@@ -44,28 +45,7 @@ func main() {
 	}
 	defer db.Close()
 
-	exists, err := utils.RowExists(db, table.PayPeriods.TableName(), 1)
-	if err != nil {
-		logger.Error("cannot query pay period table", "error", err)
-		os.Exit(1)
-	}
-	if !exists {
-		startDate, endDate := utils.GetWeekStartEnd(time.Now().UTC())
-		stmt := table.PayPeriods.INSERT(table.PayPeriods.StartDate, table.PayPeriods.EndDate, table.PayPeriods.Status).
-			VALUES(startDate, endDate, payperiods.Edit.String())
-
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-
-		_, err = stmt.ExecContext(ctx, db)
-		if err != nil {
-			logger.Error("cannot insert pay period", "error", err)
-			cancel()
-			os.Exit(1)
-		}
-
-		logger.Info("successfully added a new pay period!")
-		cancel()
-	}
+	initPayPeriod(db, logger)
 
 	mux := http.NewServeMux()
 
@@ -91,8 +71,6 @@ func main() {
 		Addr:    ":8080",
 		Handler: mux,
 		// Use route level timeouts
-		// ReadTimeout:  1 * time.Second,
-		// WriteTimeout: 10 * time.Second,
 	}
 
 	logger.Info("server starting on port 8080")
@@ -100,5 +78,30 @@ func main() {
 	if err := server.ListenAndServe(); err != nil {
 		logger.Error("server err", "error", err)
 		os.Exit(1)
+	}
+}
+
+func initPayPeriod(db *sql.DB, logger *slog.Logger) {
+	exists, err := utils.RowExists(db, table.PayPeriods.TableName(), 1)
+	if err != nil {
+		logger.Error("cannot query pay period table", "error", err)
+		os.Exit(1)
+	}
+	if !exists {
+		startDate, endDate := utils.GetWeekStartEnd(time.Now().UTC())
+		stmt := table.PayPeriods.INSERT(table.PayPeriods.StartDate, table.PayPeriods.EndDate, table.PayPeriods.Status).
+			VALUES(startDate, endDate, payperiods.Edit.String())
+
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+
+		_, err = stmt.ExecContext(ctx, db)
+		if err != nil {
+			logger.Error("cannot insert pay period", "error", err)
+			cancel()
+			os.Exit(1)
+		}
+
+		logger.Info("successfully added a new pay period!")
+		cancel()
 	}
 }
