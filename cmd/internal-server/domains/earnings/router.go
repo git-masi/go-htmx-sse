@@ -21,23 +21,23 @@ import (
 	jetsqlite "github.com/go-jet/jet/v2/sqlite"
 )
 
-type Config struct {
+type RouterConfig struct {
 	DB     *sql.DB
 	PubSub *events.PubSub[PubSubEvent]
 	Logger *slog.Logger
 }
 
-func NewRouter(cfg Config) *http.ServeMux {
+func NewRouter(cfg RouterConfig) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /create", addEarning(cfg))
+	mux.HandleFunc("POST /create", createEarning(cfg))
 
 	mux.HandleFunc("GET /sse/created", emitEarningCreated(cfg))
 
 	return mux
 }
 
-func addEarning(cfg Config) func(w http.ResponseWriter, r *http.Request) {
+func createEarning(cfg RouterConfig) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
 		if err != nil {
@@ -160,7 +160,7 @@ func addEarning(cfg Config) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func emitEarningCreated(cfg Config) func(w http.ResponseWriter, r *http.Request) {
+func emitEarningCreated(cfg RouterConfig) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Context().Done()
 

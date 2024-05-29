@@ -17,23 +17,66 @@ import (
 	jetsqlite "github.com/go-jet/jet/v2/sqlite"
 )
 
-type Config struct {
+type RouterConfig struct {
 	DB     *sql.DB
 	PubSub *events.PubSub[PubSubEvent]
 	Logger *slog.Logger
 }
 
-func NewRouter(cfg Config) *http.ServeMux {
+func NewRouter(cfg RouterConfig) *http.ServeMux {
 	mux := http.NewServeMux()
+
+	mux.HandleFunc("POST /create", createWorker(cfg))
 
 	mux.HandleFunc("GET /sse/created", emitWorkerCreated(cfg))
 
-	mux.HandleFunc("POST /create", addWorker(cfg))
+	syncWorkers(SyncConfig{
+		DB:             cfg.DB,
+		PubSub:         cfg.PubSub,
+		Logger:         cfg.Logger,
+		MaxConcurrency: 3,
+	})
 
 	return mux
 }
 
-func emitWorkerCreated(cfg Config) func(http.ResponseWriter, *http.Request) {
+func createWorker(cfg RouterConfig) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		stmt := Workers.INSERT(
+			Workers.FirstName,
+			Workers.LastName,
+			Workers.Email,
+			Workers.Status,
+		).VALUES(
+			gofakeit.FirstName(),
+			gofakeit.LastName(),
+			gofakeit.Email(),
+			Pending.String(),
+		)
+
+		cfg.Logger.Info(stmt.DebugSql())
+
+		res, err := stmt.ExecContext(r.Context(), cfg.DB)
+		if err != nil {
+			cfg.Logger.Error("sql exec err", "error", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		id, err := res.LastInsertId()
+		if err != nil {
+			cfg.Logger.Error("sql exec err", "error", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		cfg.Logger.Info("new worker id", "id", id)
+
+		cfg.PubSub.Publish(Created.String(), PubSubEvent{WorkerID: id})
+	}
+}
+
+func emitWorkerCreated(cfg RouterConfig) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Context().Done()
 
@@ -91,41 +134,5 @@ func emitWorkerCreated(cfg Config) func(http.ResponseWriter, *http.Request) {
 				flusher.Flush()
 			}
 		}
-	}
-}
-
-func addWorker(cfg Config) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		stmt := Workers.INSERT(
-			Workers.FirstName,
-			Workers.LastName,
-			Workers.Email,
-			Workers.Status,
-		).VALUES(
-			gofakeit.FirstName(),
-			gofakeit.LastName(),
-			gofakeit.Email(),
-			Pending.String(),
-		)
-
-		cfg.Logger.Info(stmt.DebugSql())
-
-		res, err := stmt.ExecContext(r.Context(), cfg.DB)
-		if err != nil {
-			cfg.Logger.Error("sql exec err", "error", err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-
-		id, err := res.LastInsertId()
-		if err != nil {
-			cfg.Logger.Error("sql exec err", "error", err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-
-		cfg.Logger.Info("new worker id", "id", id)
-
-		cfg.PubSub.Publish(Created.String(), PubSubEvent{WorkerID: id})
 	}
 }

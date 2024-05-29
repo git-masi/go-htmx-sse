@@ -60,10 +60,10 @@ func main() {
 		features.Home().Render(r.Context(), w)
 	})
 
-	workersRouter := workers.NewRouter(workers.Config{DB: db, PubSub: wps, Logger: logger})
+	workersRouter := workers.NewRouter(workers.RouterConfig{DB: db, PubSub: wps, Logger: logger})
 	mux.Handle("/workers/", http.StripPrefix("/workers", workersRouter))
 
-	earningsRouter := earnings.NewRouter(earnings.Config{DB: db, PubSub: eps, Logger: logger})
+	earningsRouter := earnings.NewRouter(earnings.RouterConfig{DB: db, PubSub: eps, Logger: logger})
 	mux.Handle("/earnings/", http.StripPrefix("/earnings", earningsRouter))
 
 	server := http.Server{
