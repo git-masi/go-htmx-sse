@@ -32,9 +32,6 @@ func NewRouter(cfg RouterConfig) *http.ServeMux {
 
 	mux.HandleFunc("GET /sse/created", sseHandler(cfg))
 
-	// disabling this for now because it's not working
-	// syncWorkers(SyncConfig(cfg))
-
 	return mux
 }
 
@@ -72,7 +69,6 @@ func createWorker(cfg RouterConfig) func(http.ResponseWriter, *http.Request) {
 
 		cfg.PubSub.Publish(Topic, PubSubEvent{WorkerID: id, Event: Created})
 
-		// TODO: remove this once `syncWorkers` is working
 		go func() {
 			time.Sleep(time.Duration(math.Max(1000, float64(rand.IntN(4000)))) * time.Millisecond)
 			cfg.Logger.Info("setting worker to active", "id", id)
