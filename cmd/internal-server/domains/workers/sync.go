@@ -28,28 +28,29 @@ func syncWorkers(cfg SyncConfig) {
 	for range cfg.MaxConcurrency {
 		go func() {
 			for w := range ch {
-				if w.Event != Created {
-					continue
+				if w.Event == Created {
+					time.Sleep(time.Duration(math.Max(1000, float64(rand.IntN(4000)))) * time.Millisecond)
+					cfg.Logger.Info("setting worker to active", "id", w.WorkerID)
+
+					stmt := Workers.UPDATE(Workers.Status).
+						SET(Active.String()).
+						WHERE(Workers.ID.EQ(jetsqlite.Int(w.WorkerID)))
+
+					ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+
+					_, err := stmt.ExecContext(ctx, cfg.DB)
+					if err != nil {
+						// TODO: need better error handling
+						cfg.Logger.Error("cannot set worker to active", "id", w.WorkerID)
+					}
+
+					cfg.PubSub.Publish(Topic, PubSubEvent{WorkerID: w.WorkerID, Event: Updated})
+
+					cancel()
 				}
-				time.Sleep(time.Duration(math.Max(1000, float64(rand.IntN(4000)))) * time.Millisecond)
-				cfg.Logger.Info("setting worker to active", "id", w.WorkerID)
-
-				stmt := Workers.UPDATE(Workers.Status).
-					SET(Active.String()).
-					WHERE(Workers.ID.EQ(jetsqlite.Int(w.WorkerID)))
-
-				ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
-
-				_, err := stmt.ExecContext(ctx, cfg.DB)
-				if err != nil {
-					// TODO: need better error handling
-					cfg.Logger.Error("cannot set worker to active", "id", w.WorkerID)
-				}
-
-				cfg.PubSub.Publish(Topic, PubSubEvent{WorkerID: w.WorkerID, Event: Updated})
-
-				cancel()
 			}
 		}()
 	}
+
+	cfg.Logger.Info("worker sync setup complete")
 }
