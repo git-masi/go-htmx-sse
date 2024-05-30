@@ -23,7 +23,7 @@ templ Home() {
 							hx-ext="sse"
 							sse-connect="/workers/sse/created"
 							sse-swap="WorkerCreated"
-							hx-swap="beforeend scroll:bottom"
+							hx-swap="beforeend"
 							class="overflow-y-scroll box-border"
 							style="height: calc(50vh - 54px - 3rem);"
 						></div>
@@ -52,7 +52,7 @@ templ Home() {
 						hx-ext="sse"
 						sse-connect="/earnings/sse/created"
 						sse-swap="EarningCreated"
-						hx-swap="beforeend scroll:bottom"
+						hx-swap="beforeend"
 						class="m-b-2 overflow-y-scroll box-border"
 						style="height: calc(50vh - 54px - 3rem);"
 					></div>
@@ -65,31 +65,33 @@ templ Home() {
 			</section>
 		</main>
 		<script>
-			// document.addEventListener("DOMContentLoaded", () => {
-			// 	const wcl = document.querySelector("[data-worker-created-list]");
-			// 	if (wcl !== null) {
-			// 		const wclObserver = new MutationObserver((mutationsList) => {
-			// 			for (let mutation of mutationsList) {
-			// 				if (mutation.type === 'childList') {
-			// 					wcl.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-			// 				}
-			// 			}
-			// 		});
-			// 		wclObserver.observe(wcl, {childList:true})
-			// 	}
+			document.addEventListener("DOMContentLoaded", () => {
+				// Supposedly HTMX has `scroll:bottom` which should handle this but it
+				// wasn't working when I tested
+				const wcl = document.querySelector("[data-worker-created-list]");
+				if (wcl !== null) {
+					const wclObserver = new MutationObserver((mutationsList) => {
+						for (let mutation of mutationsList) {
+							if (mutation.type === 'childList') {
+								wcl.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+							}
+						}
+					});
+					wclObserver.observe(wcl, {childList:true})
+				}
 
-			// 	const ecl = document.querySelector("[data-earning-created-list]");
-			// 	if (ecl !== null) {
-			// 		const eclObserver = new MutationObserver((mutationsList) => {
-			// 			for (let mutation of mutationsList) {
-			// 				if (mutation.type === 'childList') {
-			// 					ecl.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-			// 				}
-			// 			}
-			// 		});
-			// 		eclObserver.observe(ecl, {childList:true})
-			// 	}
-			// });
+				const ecl = document.querySelector("[data-earning-created-list]");
+				if (ecl !== null) {
+					const eclObserver = new MutationObserver((mutationsList) => {
+						for (let mutation of mutationsList) {
+							if (mutation.type === 'childList') {
+								ecl.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+							}
+						}
+					});
+					eclObserver.observe(ecl, {childList:true})
+				}
+			});
 		</script>
 	}
 }
