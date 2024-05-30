@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-templ Home(pp model.PayPeriods) {
+templ Home(pp model.PayPeriods, prev []model.PayPeriods) {
 	@layout.Page("Paynext") {
 		<main class="box-border h-screen p-2 grid grid-cols-3 grid-rows-2">
 			<section class="row-span-2 p-y-2 p-r-1">
@@ -43,7 +43,24 @@ templ Home(pp model.PayPeriods) {
 				</div>
 				<div class="flex flex-col p-2 rd shadow-md shadow-gray">
 					<h3 class="m-t-0 m-b-2">Reports</h3>
-					<div class="grow overflow-y-scroll box-border"></div>
+					<div class="grow overflow-y-scroll box-border">
+						for _, ppp := range prev {
+							<div class="flex">
+								<span class="color-sky-800">{ ppp.StartDate[:10] }</span>
+								to 
+								<span class="color-sky-800">{ ppp.EndDate[:10] }</span>
+								<button
+									type="button"
+									hx-get={ fmt.Sprintf("/pay-periods/report/%d", ppp.ID) }
+									hx-target="body"
+									hx-swap="beforeend"
+									class="m-l-2"
+								>
+									Report
+								</button>
+							</div>
+						}
+					</div>
 				</div>
 			</section>
 			<section class="col-span-2 row-span-1 flex flex-col justify-between rd shadow-md shadow-gray p-2">

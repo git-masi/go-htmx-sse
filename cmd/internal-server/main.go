@@ -65,7 +65,14 @@ func main() {
 			return
 		}
 
-		features.Home(pp).Render(r.Context(), w)
+		ppp, err := payperiods.GetPrevPayPeriods(db)
+		if err != nil {
+			logger.Error("cannot get previous pay periods", "error", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		features.Home(pp, ppp).Render(r.Context(), w)
 	})
 
 	workersRouter := workers.NewRouter(workers.RouterConfig{DB: db, PubSub: wps, Logger: logger})

@@ -11,6 +11,7 @@ import (
 
 	// TODO add to whitelist
 	"github.com/git-masi/paynext/cmd/internal-server/domains/earnings"
+	"github.com/git-masi/paynext/internal/.gen/model"
 	. "github.com/git-masi/paynext/internal/.gen/table"
 	"github.com/git-masi/paynext/internal/utils"
 	jet "github.com/go-jet/jet/v2/sqlite"
@@ -39,15 +40,10 @@ func submitPayPeriod(cfg RouterConfig) http.HandlerFunc {
 			return
 		}
 
-		exists, err := utils.RowExists(cfg.DB, PayPeriods.TableName(), id)
+		pp, err := getPayPeriod(cfg.DB, id)
 		if err != nil {
-			cfg.Logger.Error("cannot check if pay period exists", "id", id)
+			cfg.Logger.Error("cannot get pay period", "id", id)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-		if !exists {
-			cfg.Logger.Error("no pay period exists", "id", id)
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 
@@ -60,7 +56,21 @@ func submitPayPeriod(cfg RouterConfig) http.HandlerFunc {
 
 		_, err = stmt.ExecContext(ctx, cfg.DB)
 		if err != nil {
-			cfg.Logger.Error("cannot check if pay period exists", "id", id)
+			cfg.Logger.Error("cannot update pay period", "id", id)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		prevEnd, err := utils.ParseDBDate(pp.EndDate)
+		if err != nil {
+			cfg.Logger.Error("cannot parse date string", "date", pp.EndDate)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		err = newPayPeriod(cfg.DB, prevEnd.Add(24*time.Hour))
+		if err != nil {
+			cfg.Logger.Error("cannot init new pay period")
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
@@ -90,5 +100,40 @@ func submitPayPeriod(cfg RouterConfig) http.HandlerFunc {
 				cfg.Logger.Info("updated earning status", "id", e.EarningID)
 			}
 		}()
+
+		http.Redirect(w, r, "/home", http.StatusSeeOther)
 	}
+}
+
+func getPayPeriod(db *sql.DB, id int64) (model.PayPeriods, error) {
+	stmt := PayPeriods.SELECT(PayPeriods.AllColumns).
+		WHERE(PayPeriods.ID.EQ(jet.Int(id)))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	var dest model.PayPeriods
+
+	err := stmt.QueryContext(ctx, db, &dest)
+	if err != nil {
+		return model.PayPeriods{}, err
+	}
+
+	return dest, nil
+}
+
+func newPayPeriod(db *sql.DB, day time.Time) error {
+	startDate, endDate := utils.GetWeekStartEnd(day)
+	stmt := PayPeriods.INSERT(PayPeriods.StartDate, PayPeriods.EndDate, PayPeriods.Status).
+		VALUES(startDate, endDate, Edit.String())
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	_, err := stmt.ExecContext(ctx, db)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

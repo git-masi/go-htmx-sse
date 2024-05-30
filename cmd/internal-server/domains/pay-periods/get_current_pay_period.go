@@ -28,3 +28,20 @@ func GetCurrentPayPeriod(db *sql.DB) (model.PayPeriods, error) {
 
 	return dest, err
 }
+
+func GetPrevPayPeriods(db *sql.DB) ([]model.PayPeriods, error) {
+	stmt := PayPeriods.SELECT(PayPeriods.AllColumns).
+		WHERE(PayPeriods.Status.NOT_EQ(jet.String(Edit.String())))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	var dest []model.PayPeriods
+
+	err := stmt.QueryContext(ctx, db, &dest)
+	if err != nil {
+		return nil, err
+	}
+
+	return dest, err
+}
