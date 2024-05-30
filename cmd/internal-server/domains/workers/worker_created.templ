@@ -7,13 +7,14 @@ import (
 
 templ workerCreated(w model.Workers, payPeriodID int64) {
 	<div
-		class="flex"
+		class="grid grid-cols-4 mb-2"
 		id={ fmt.Sprintf("worker-%d", *w.ID) }
 		if w.Status != Pending.String() {
 			hx-swap-oob="true"
 		}
 	>
-		<p class="mr-4">{ w.FirstName } { w.LastName } - { w.Status }</p>
+		<p class="mr-4 col-span-2">{ w.FirstName } { w.LastName }</p>
+		<p>{ w.Status }</p>
 		<button
 			type="button"
 			hx-post="/earnings/create"
