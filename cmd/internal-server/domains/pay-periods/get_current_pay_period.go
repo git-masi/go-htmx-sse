@@ -13,7 +13,7 @@ import (
 )
 
 func GetCurrentPayPeriod(db *sql.DB) (model.PayPeriods, error) {
-	stmt := PayPeriods.SELECT(PayPeriods.ID).
+	stmt := PayPeriods.SELECT(PayPeriods.AllColumns).
 		WHERE(PayPeriods.Status.EQ(jet.String(Edit.String())))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)

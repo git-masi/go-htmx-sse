@@ -1,8 +1,12 @@
 package features
 
-import "github.com/git-masi/paynext/cmd/internal-server/components/layout"
+import (
+	"github.com/git-masi/paynext/cmd/internal-server/components/layout"
+	"github.com/git-masi/paynext/internal/.gen/model"
+	"fmt"
+)
 
-templ Home() {
+templ Home(pp model.PayPeriods) {
 	@layout.Page("Paynext") {
 		<main class="box-border h-screen p-2 grid grid-cols-3 grid-rows-2">
 			<section class="row-span-2 p-y-2 p-r-1">
@@ -44,7 +48,12 @@ templ Home() {
 			</section>
 			<section class="col-span-2 row-span-1 flex flex-col justify-between rd shadow-md shadow-gray p-2">
 				<div>
-					<h3 class="m-t-0 m-b-2">Pay period</h3>
+					<h3 class="m-t-0 m-b-2">
+						Pay period 
+						<span class="color-sky-800">{ pp.StartDate[:10] }</span>
+						to 
+						<span class="color-sky-800">{ pp.EndDate[:10] }</span>
+					</h3>
 					<div
 						class="w-full overflow-y-scroll"
 						style="height: calc(50vh - 54px - 3rem);"
@@ -73,8 +82,7 @@ templ Home() {
 				</div>
 				<div class="flex justify-end">
 					<a
-						type="button"
-						href="/pay-periods/submit"
+						href={ templ.SafeURL(fmt.Sprintf("/pay-periods/submit/%d", *pp.ID)) }
 					>
 						Submit Payroll
 					</a>

@@ -58,7 +58,14 @@ func main() {
 	})
 
 	mux.HandleFunc("GET /home", func(w http.ResponseWriter, r *http.Request) {
-		features.Home().Render(r.Context(), w)
+		pp, err := payperiods.GetCurrentPayPeriod(db)
+		if err != nil {
+			logger.Error("cannot get current pay period", "error", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		features.Home(pp).Render(r.Context(), w)
 	})
 
 	workersRouter := workers.NewRouter(workers.RouterConfig{DB: db, PubSub: wps, Logger: logger})
