@@ -7,15 +7,18 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/git-masi/paynext/cmd/internal-server/domains/earnings"
 	payperiods "github.com/git-masi/paynext/cmd/internal-server/domains/pay-periods"
 	"github.com/git-masi/paynext/cmd/internal-server/domains/workers"
 	"github.com/git-masi/paynext/cmd/internal-server/features"
+	"github.com/git-masi/paynext/internal/.gen/model"
 	"github.com/git-masi/paynext/internal/.gen/table"
 	"github.com/git-masi/paynext/internal/sqlitedb"
 	"github.com/git-masi/paynext/internal/utils"
+	jet "github.com/go-jet/jet/v2/sqlite"
 	"github.com/lmittmann/tint"
 )
 
@@ -66,6 +69,34 @@ func main() {
 		}
 
 		features.Home(pp).Render(r.Context(), w)
+	})
+
+	mux.HandleFunc("GET /pay-periods/submit/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+		if err != nil {
+			logger.Error("invalid pay period ID", "id", r.PathValue("id"))
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		stmt := table.PayPeriods.SELECT(table.PayPeriods.AllColumns).
+			WHERE(table.PayPeriods.ID.EQ(jet.Int(id)))
+
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
+
+		var dest model.PayPeriods
+
+		err = stmt.QueryContext(ctx, db, &dest)
+		if err != nil {
+			logger.Error("cannot query pay period by ID", "id", r.PathValue("id"))
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		go func() {
+			//
+		}()
 	})
 
 	workersRouter := workers.NewRouter(workers.RouterConfig{DB: db, PubSub: wps, Logger: logger})
