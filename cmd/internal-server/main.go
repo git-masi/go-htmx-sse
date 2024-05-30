@@ -16,6 +16,7 @@ import (
 	"github.com/git-masi/paynext/internal/.gen/table"
 	"github.com/git-masi/paynext/internal/sqlitedb"
 	"github.com/git-masi/paynext/internal/utils"
+	"github.com/lmittmann/tint"
 )
 
 type config struct {
@@ -25,7 +26,7 @@ type config struct {
 func main() {
 	var cfg config
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}))
+	logger := slog.New(tint.NewHandler(os.Stdout, nil))
 
 	wps := workers.NewWorkerPubSub()
 	eps := earnings.NewEarningPubSub()

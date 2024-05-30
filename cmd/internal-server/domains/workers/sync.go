@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log/slog"
+	"math"
 	"math/rand/v2"
 	"time"
 
@@ -22,13 +23,15 @@ type SyncConfig struct {
 
 // Imagine this is syncing with some external API
 func syncWorkers(cfg SyncConfig) {
-	ch := cfg.PubSub.Subscribe(Created.String())
-	defer close(ch)
+	ch := cfg.PubSub.Subscribe(Topic)
 
 	for range cfg.MaxConcurrency {
 		go func() {
 			for w := range ch {
-				time.Sleep(time.Duration(rand.IntN(4000)) * time.Millisecond)
+				if w.Event != Created {
+					continue
+				}
+				time.Sleep(time.Duration(math.Max(1000, float64(rand.IntN(4000)))) * time.Millisecond)
 				cfg.Logger.Info("setting worker to active", "id", w.WorkerID)
 
 				stmt := Workers.UPDATE(Workers.Status).
@@ -43,7 +46,7 @@ func syncWorkers(cfg SyncConfig) {
 					cfg.Logger.Error("cannot set worker to active", "id", w.WorkerID)
 				}
 
-				cfg.PubSub.Publish(Active.String(), PubSubEvent{WorkerID: w.WorkerID})
+				cfg.PubSub.Publish(Topic, PubSubEvent{WorkerID: w.WorkerID, Event: Updated})
 
 				cancel()
 			}

@@ -28,7 +28,7 @@ func NewRouter(cfg RouterConfig) *http.ServeMux {
 
 	mux.HandleFunc("POST /create", createWorker(cfg))
 
-	mux.HandleFunc("GET /sse/created", emitWorkerCreated(cfg))
+	mux.HandleFunc("GET /sse/created", sseHandler(cfg))
 
 	syncWorkers(SyncConfig{
 		DB:             cfg.DB,
@@ -54,7 +54,7 @@ func createWorker(cfg RouterConfig) func(http.ResponseWriter, *http.Request) {
 			Pending.String(),
 		)
 
-		cfg.Logger.Info(stmt.DebugSql())
+		// cfg.Logger.Info(stmt.DebugSql())
 
 		res, err := stmt.ExecContext(r.Context(), cfg.DB)
 		if err != nil {
@@ -72,11 +72,11 @@ func createWorker(cfg RouterConfig) func(http.ResponseWriter, *http.Request) {
 
 		cfg.Logger.Info("new worker id", "id", id)
 
-		cfg.PubSub.Publish(Created.String(), PubSubEvent{WorkerID: id})
+		cfg.PubSub.Publish(Topic, PubSubEvent{WorkerID: id, Event: Created})
 	}
 }
 
-func emitWorkerCreated(cfg RouterConfig) func(http.ResponseWriter, *http.Request) {
+func sseHandler(cfg RouterConfig) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Context().Done()
 
@@ -94,9 +94,8 @@ func emitWorkerCreated(cfg RouterConfig) func(http.ResponseWriter, *http.Request
 			return
 		}
 
-		topic := Created.String()
-		ch := cfg.PubSub.Subscribe(topic)
-		defer cfg.PubSub.Unsubscribe(topic, ch)
+		ch := cfg.PubSub.Subscribe(Topic)
+		defer cfg.PubSub.Unsubscribe(Topic, ch)
 
 		for {
 			select {
@@ -104,7 +103,7 @@ func emitWorkerCreated(cfg RouterConfig) func(http.ResponseWriter, *http.Request
 				stmt := Workers.SELECT(Workers.AllColumns).
 					WHERE(Workers.ID.EQ(jetsqlite.Int(e.WorkerID)))
 
-				cfg.Logger.Info(stmt.DebugSql())
+				// cfg.Logger.Info(stmt.DebugSql())
 
 				var dest model.Workers
 

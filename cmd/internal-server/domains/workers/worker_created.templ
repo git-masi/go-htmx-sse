@@ -6,7 +6,13 @@ import (
 )
 
 templ workerCreated(w model.Workers, payPeriodID int64) {
-	<div class="flex">
+	<div
+		class="flex"
+		id={ fmt.Sprintf("worker-%d", *w.ID) }
+		if w.Status != Pending.String() {
+			hx-swap-oob="true"
+		}
+	>
 		<p class="mr-4">{ w.FirstName } { w.LastName } - { w.Status }</p>
 		<button
 			type="button"

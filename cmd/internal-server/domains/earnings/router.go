@@ -188,7 +188,7 @@ func emitEarningCreated(cfg RouterConfig) func(w http.ResponseWriter, r *http.Re
 				stmt := Earnings.SELECT(Earnings.AllColumns).
 					WHERE(Earnings.ID.EQ(jetsqlite.Int(e.EarningID)))
 
-				cfg.Logger.Info(stmt.DebugSql())
+				// cfg.Logger.Info(stmt.DebugSql())
 
 				var dest model.Earnings
 
