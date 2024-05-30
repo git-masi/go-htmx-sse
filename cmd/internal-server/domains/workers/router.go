@@ -35,7 +35,7 @@ func NewRouter(cfg RouterConfig) *http.ServeMux {
 	return mux
 }
 
-func createWorker(cfg RouterConfig) func(http.ResponseWriter, *http.Request) {
+func createWorker(cfg RouterConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		stmt := Workers.INSERT(
 			Workers.FirstName,
@@ -94,7 +94,7 @@ func createWorker(cfg RouterConfig) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
-func sseHandler(cfg RouterConfig) func(http.ResponseWriter, *http.Request) {
+func sseHandler(cfg RouterConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Context().Done()
 

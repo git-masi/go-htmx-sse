@@ -37,7 +37,7 @@ func NewRouter(cfg RouterConfig) *http.ServeMux {
 	return mux
 }
 
-func createEarning(cfg RouterConfig) func(w http.ResponseWriter, r *http.Request) {
+func createEarning(cfg RouterConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
 		if err != nil {
@@ -160,7 +160,7 @@ func createEarning(cfg RouterConfig) func(w http.ResponseWriter, r *http.Request
 	}
 }
 
-func emitEarningCreated(cfg RouterConfig) func(w http.ResponseWriter, r *http.Request) {
+func emitEarningCreated(cfg RouterConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Context().Done()
 
