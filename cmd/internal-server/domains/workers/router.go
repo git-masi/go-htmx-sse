@@ -135,7 +135,7 @@ func sseHandler(cfg RouterConfig) func(http.ResponseWriter, *http.Request) {
 					return
 				}
 
-				payPeriodID, err := payperiods.GetCurrentPayPeriod(cfg.DB)
+				pp, err := payperiods.GetCurrentPayPeriod(cfg.DB)
 				if err != nil {
 					cfg.Logger.Error("cannot get pay period ID", "error", err)
 					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -143,7 +143,7 @@ func sseHandler(cfg RouterConfig) func(http.ResponseWriter, *http.Request) {
 					return
 				}
 
-				w.Write(WorkerCreated(r.Context(), dest, payPeriodID).Bytes())
+				w.Write(WorkerCreated(r.Context(), dest, int64(*pp.ID)).Bytes())
 				flusher.Flush()
 				cancel()
 			case <-time.After(5 * time.Second):

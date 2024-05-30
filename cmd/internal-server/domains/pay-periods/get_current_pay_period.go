@@ -12,7 +12,7 @@ import (
 	jet "github.com/go-jet/jet/v2/sqlite"
 )
 
-func GetCurrentPayPeriod(db *sql.DB) (int64, error) {
+func GetCurrentPayPeriod(db *sql.DB) (model.PayPeriods, error) {
 	stmt := PayPeriods.SELECT(PayPeriods.ID).
 		WHERE(PayPeriods.Status.EQ(jet.String(Edit.String())))
 
@@ -23,8 +23,8 @@ func GetCurrentPayPeriod(db *sql.DB) (int64, error) {
 
 	err := stmt.QueryContext(ctx, db, &dest)
 	if err != nil {
-		return 0, err
+		return model.PayPeriods{}, err
 	}
 
-	return int64(*dest.ID), err
+	return dest, err
 }
