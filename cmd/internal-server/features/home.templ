@@ -47,15 +47,26 @@ templ Home() {
 					class="grow flex flex-col rd shadow-md shadow-gray p-2"
 				>
 					<h3 class="m-t-0 m-b-2">Pay period</h3>
-					<div
-						data-earning-created-list
-						hx-ext="sse"
-						sse-connect="/earnings/sse/created"
-						sse-swap="EarningCreated"
-						hx-swap="beforeend"
-						class="m-b-2 overflow-y-scroll box-border"
-						style="height: calc(50vh - 54px - 3rem);"
-					></div>
+					<table>
+						<thead>
+							<tr>
+								<th class="text-left">Date Of Work</th>
+								<th class="text-left">Worker ID</th>
+								<th class="text-left">Hours</th>
+								<th class="text-left">Pay Rate</th>
+								<th class="text-left">Status</th>
+							</tr>
+						</thead>
+						<tbody
+							data-earning-created-list
+							hx-ext="sse"
+							sse-connect="/earnings/sse/created"
+							sse-swap="EarningCreated"
+							hx-swap="beforeend"
+							class="m-b-2 overflow-y-scroll box-border"
+							style="height: calc(50vh - 54px - 3rem);"
+						></tbody>
+					</table>
 					<div class="flex justify-end">
 						<button type="submit">
 							Submit Payroll

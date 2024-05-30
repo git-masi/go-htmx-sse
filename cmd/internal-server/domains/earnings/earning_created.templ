@@ -6,12 +6,11 @@ import (
 )
 
 templ earningCreated(e model.Earnings) {
-	<div data-earning-id={ fmt.Sprint(e.ID) }>
-		<p>
-			<span>{ e.DateOfWork } - { e.Status }</span>
-			| <span>Worker ID: { fmt.Sprint(e.WorkerID) } </span>
-			| <span>Hours: { fmt.Sprint(e.HoursWorked) }</span>
-			| <span>Pay rate: { fmt.Sprint(e.PayRateAmount) }</span>
-		</p>
-	</div>
+	<tr data-earning-id={ fmt.Sprint(e.ID) }>
+		<td>{ e.DateOfWork[:10] }</td>
+		<td>Worker ID: { fmt.Sprint(e.WorkerID) } </td>
+		<td>Hours: { fmt.Sprint(e.HoursWorked) }</td>
+		<td>Pay rate: { fmt.Sprint(e.PayRateAmount) }</td>
+		<td>{ e.Status }</td>
+	</tr>
 }
