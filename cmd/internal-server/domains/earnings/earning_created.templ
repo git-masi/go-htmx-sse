@@ -6,7 +6,7 @@ import (
 )
 
 templ earningCreated(e model.Earnings) {
-	<tr data-earning-id={ fmt.Sprint(e.ID) }>
+	<tr data-earning-id={ fmt.Sprint(*e.ID) }>
 		<td>{ e.DateOfWork[:10] }</td>
 		<td>Worker ID: { fmt.Sprint(e.WorkerID) } </td>
 		<td>Hours: { fmt.Sprint(e.HoursWorked) }</td>

@@ -42,37 +42,40 @@ templ Home() {
 					<div class="grow overflow-y-scroll box-border"></div>
 				</div>
 			</section>
-			<section class="flex col-span-2 row-span-1">
-				<form
-					class="grow flex flex-col rd shadow-md shadow-gray p-2"
-				>
+			<section class="col-span-2 row-span-1 flex flex-col justify-between rd shadow-md shadow-gray p-2">
+				<div>
 					<h3 class="m-t-0 m-b-2">Pay period</h3>
-					<table>
-						<thead>
-							<tr>
-								<th class="text-left">Date Of Work</th>
-								<th class="text-left">Worker ID</th>
-								<th class="text-left">Hours</th>
-								<th class="text-left">Pay Rate</th>
-								<th class="text-left">Status</th>
-							</tr>
-						</thead>
-						<tbody
-							data-earning-created-list
-							hx-ext="sse"
-							sse-connect="/earnings/sse/created"
-							sse-swap="EarningCreated"
-							hx-swap="beforeend"
-							class="m-b-2 overflow-y-scroll box-border"
-							style="height: calc(50vh - 54px - 3rem);"
-						></tbody>
-					</table>
-					<div class="flex justify-end">
-						<button type="submit">
-							Submit Payroll
-						</button>
+					<div
+						class="w-full overflow-y-scroll"
+						style="height: calc(50vh - 54px - 3rem);"
+					>
+						<table
+							class="w-full m-b-2 box-border table-fixed"
+						>
+							<thead>
+								<tr>
+									<th scope="col" class="text-left">Date Of Work</th>
+									<th scope="col" class="text-left">Worker ID</th>
+									<th scope="col" class="text-left">Hours</th>
+									<th scope="col" class="text-left">Pay Rate</th>
+									<th scope="col" class="text-left">Status</th>
+								</tr>
+							</thead>
+							<tbody
+								data-earning-created-list
+								hx-ext="sse"
+								sse-connect="/earnings/sse/created"
+								sse-swap="EarningCreated"
+								hx-swap="beforeend"
+							></tbody>
+						</table>
 					</div>
-				</form>
+				</div>
+				<div class="flex justify-end">
+					<button type="button">
+						Submit Payroll
+					</button>
+				</div>
 			</section>
 		</main>
 		<script>
