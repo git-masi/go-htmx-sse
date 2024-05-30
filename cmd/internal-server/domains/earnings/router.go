@@ -18,7 +18,7 @@ import (
 
 	// TODO add to whitelist
 	. "github.com/git-masi/paynext/internal/.gen/table"
-	jetsqlite "github.com/go-jet/jet/v2/sqlite"
+	jet "github.com/go-jet/jet/v2/sqlite"
 )
 
 type RouterConfig struct {
@@ -74,7 +74,7 @@ func createEarning(cfg RouterConfig) func(w http.ResponseWriter, r *http.Request
 		}
 
 		payPeriodStmt := PayPeriods.SELECT(PayPeriods.StartDate, PayPeriods.EndDate).
-			WHERE(PayPeriods.ID.EQ(jetsqlite.Int(payPeriodID)))
+			WHERE(PayPeriods.ID.EQ(jet.Int(payPeriodID)))
 
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 		defer cancel()
@@ -186,7 +186,7 @@ func emitEarningCreated(cfg RouterConfig) func(w http.ResponseWriter, r *http.Re
 			select {
 			case e := <-ch:
 				stmt := Earnings.SELECT(Earnings.AllColumns).
-					WHERE(Earnings.ID.EQ(jetsqlite.Int(e.EarningID)))
+					WHERE(Earnings.ID.EQ(jet.Int(e.EarningID)))
 
 				// cfg.Logger.Info(stmt.DebugSql())
 

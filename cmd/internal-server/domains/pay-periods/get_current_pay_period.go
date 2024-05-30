@@ -9,12 +9,12 @@ import (
 
 	// TODO add to whitelist
 	. "github.com/git-masi/paynext/internal/.gen/table"
-	jetsqlite "github.com/go-jet/jet/v2/sqlite"
+	jet "github.com/go-jet/jet/v2/sqlite"
 )
 
 func GetCurrentPayPeriod(db *sql.DB) (int64, error) {
 	stmt := PayPeriods.SELECT(PayPeriods.ID).
-		WHERE(PayPeriods.Status.EQ(jetsqlite.String(Edit.String())))
+		WHERE(PayPeriods.Status.EQ(jet.String(Edit.String())))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()

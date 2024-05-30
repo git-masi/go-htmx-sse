@@ -16,7 +16,7 @@ import (
 
 	// TODO add to whitelist
 	. "github.com/git-masi/paynext/internal/.gen/table"
-	jetsqlite "github.com/go-jet/jet/v2/sqlite"
+	jet "github.com/go-jet/jet/v2/sqlite"
 )
 
 type RouterConfig struct {
@@ -75,7 +75,7 @@ func createWorker(cfg RouterConfig) func(http.ResponseWriter, *http.Request) {
 
 			stmt := Workers.UPDATE(Workers.Status).
 				SET(Active.String()).
-				WHERE(Workers.ID.EQ(jetsqlite.Int(id)))
+				WHERE(Workers.ID.EQ(jet.Int(id)))
 
 			ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
 
@@ -119,7 +119,7 @@ func sseHandler(cfg RouterConfig) func(http.ResponseWriter, *http.Request) {
 			select {
 			case e := <-ch:
 				stmt := Workers.SELECT(Workers.AllColumns).
-					WHERE(Workers.ID.EQ(jetsqlite.Int(e.WorkerID)))
+					WHERE(Workers.ID.EQ(jet.Int(e.WorkerID)))
 
 				// cfg.Logger.Info(stmt.DebugSql())
 
