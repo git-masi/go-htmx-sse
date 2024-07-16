@@ -11,13 +11,13 @@ import (
 
 	"github.com/Rhymond/go-money"
 	"github.com/brianvoe/gofakeit/v7"
-	"github.com/git-masi/paynext/cmd/web/events"
-	"github.com/git-masi/paynext/internal/utils"
+	"github.com/git-masi/go-htmx-sse/cmd/web/events"
+	"github.com/git-masi/go-htmx-sse/internal/utils"
 
-	"github.com/git-masi/paynext/internal/.gen/model"
+	"github.com/git-masi/go-htmx-sse/internal/.gen/model"
 
 	// TODO add to whitelist
-	. "github.com/git-masi/paynext/internal/.gen/table"
+	. "github.com/git-masi/go-htmx-sse/internal/.gen/table"
 	jet "github.com/go-jet/jet/v2/sqlite"
 )
 

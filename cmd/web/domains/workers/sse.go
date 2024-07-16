@@ -5,8 +5,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/git-masi/paynext/cmd/web/events"
-	"github.com/git-masi/paynext/internal/.gen/model"
+	"github.com/git-masi/go-htmx-sse/cmd/web/events"
+	"github.com/git-masi/go-htmx-sse/internal/.gen/model"
 )
 
 const SSE_PREFIX = "Worker"

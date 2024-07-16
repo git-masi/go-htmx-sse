@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/git-masi/paynext/internal/utils"
+	"github.com/git-masi/go-htmx-sse/internal/utils"
 )
 
 func TestGetWeekStartEnd(t *testing.T) {

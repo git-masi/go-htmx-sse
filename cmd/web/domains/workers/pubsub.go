@@ -1,6 +1,6 @@
 package workers
 
-import "github.com/git-masi/paynext/cmd/web/events"
+import "github.com/git-masi/go-htmx-sse/cmd/web/events"
 
 const Topic = "Worker"
 

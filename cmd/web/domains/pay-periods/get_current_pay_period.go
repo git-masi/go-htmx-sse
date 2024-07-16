@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/git-masi/paynext/internal/.gen/model"
+	"github.com/git-masi/go-htmx-sse/internal/.gen/model"
 
 	// TODO add to whitelist
-	. "github.com/git-masi/paynext/internal/.gen/table"
+	. "github.com/git-masi/go-htmx-sse/internal/.gen/table"
 	jet "github.com/go-jet/jet/v2/sqlite"
 )
 

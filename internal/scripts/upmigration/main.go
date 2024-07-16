@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/url"
 
-	"github.com/git-masi/paynext/internal/sqlitedb"
+	"github.com/git-masi/go-htmx-sse/internal/sqlitedb"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/mattn/go-sqlite3"
 )

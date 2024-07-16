@@ -1,6 +1,6 @@
 package earnings
 
-import "github.com/git-masi/paynext/cmd/web/events"
+import "github.com/git-masi/go-htmx-sse/cmd/web/events"
 
 func NewEarningPubSub() *events.PubSub[PubSubEvent] {
 	return events.NewPubSub[PubSubEvent]()

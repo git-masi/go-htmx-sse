@@ -9,13 +9,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/git-masi/paynext/cmd/web/domains/earnings"
-	payperiods "github.com/git-masi/paynext/cmd/web/domains/pay-periods"
-	"github.com/git-masi/paynext/cmd/web/domains/workers"
-	"github.com/git-masi/paynext/cmd/web/features"
-	"github.com/git-masi/paynext/internal/.gen/table"
-	"github.com/git-masi/paynext/internal/sqlitedb"
-	"github.com/git-masi/paynext/internal/utils"
+	"github.com/git-masi/go-htmx-sse/cmd/web/domains/earnings"
+	payperiods "github.com/git-masi/go-htmx-sse/cmd/web/domains/pay-periods"
+	"github.com/git-masi/go-htmx-sse/cmd/web/domains/workers"
+	"github.com/git-masi/go-htmx-sse/cmd/web/features"
+	"github.com/git-masi/go-htmx-sse/internal/.gen/table"
+	"github.com/git-masi/go-htmx-sse/internal/sqlitedb"
+	"github.com/git-masi/go-htmx-sse/internal/utils"
 	"github.com/lmittmann/tint"
 )
 
