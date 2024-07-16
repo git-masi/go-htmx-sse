@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
-	payperiods "github.com/git-masi/paynext/cmd/internal-server/domains/pay-periods"
-	"github.com/git-masi/paynext/cmd/internal-server/events"
+	payperiods "github.com/git-masi/paynext/cmd/web/domains/pay-periods"
+	"github.com/git-masi/paynext/cmd/web/events"
 	"github.com/git-masi/paynext/internal/.gen/model"
 
 	// TODO add to whitelist

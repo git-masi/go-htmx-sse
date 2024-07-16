@@ -11,7 +11,7 @@ import (
 
 	"github.com/Rhymond/go-money"
 	"github.com/brianvoe/gofakeit/v7"
-	"github.com/git-masi/paynext/cmd/internal-server/events"
+	"github.com/git-masi/paynext/cmd/web/events"
 	"github.com/git-masi/paynext/internal/utils"
 
 	"github.com/git-masi/paynext/internal/.gen/model"

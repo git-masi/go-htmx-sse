@@ -10,7 +10,7 @@ import (
 	"time"
 
 	// TODO add to whitelist
-	"github.com/git-masi/paynext/cmd/internal-server/domains/earnings"
+	"github.com/git-masi/paynext/cmd/web/domains/earnings"
 	"github.com/git-masi/paynext/internal/.gen/model"
 	. "github.com/git-masi/paynext/internal/.gen/table"
 	"github.com/git-masi/paynext/internal/utils"
